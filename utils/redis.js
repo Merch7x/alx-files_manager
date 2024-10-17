@@ -1,26 +1,29 @@
 import { createClient } from 'redis';
+import { promisify } from 'util';
 
 class RedisClient {
   constructor() {
     this.myClient = createClient();
     this.myClient.on('error', (error) => console.log(error));
-    this.myClient.connect().catch(console.error);
   }
 
   isAlive() {
-    return this.myClient.isReady;
+    return this.myClient.connected;
   }
 
   async get(key) {
-    return this.myClient.get(key);
+    const getAsync = promisify(this.myClient.get).bind(this.myClient);
+    return getAsync(key);
   }
 
   async set(key, val, time) {
-    return this.myClient.set(key, val, { EX: time });
+    const setAsync = promisify(this.myClient.set).bind(this.myClient);
+    return setAsync(key, val, 'EX', time);
   }
 
   async del(key) {
-    return this.myClient.del(key);
+    const delAsync = promisify(this.myClient.del).bind(this.myClient);
+    return delAsync(key);
   }
 }
 
